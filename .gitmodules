@@ -1,0 +1,12 @@
+[submodule "frontend/react"]
+	path = frontend/react
+	url = https://github.com/DGPOCs/opentelemetry-template-react
+[submodule "backend/python"]
+	path = backend/python
+	url = https://github.com/DGPOCs/opentelemetry-template-python
+[submodule "backend/nodejs"]
+	path = backend/nodejs
+	url = https://github.com/DGPOCs/opentelemetry-template-nodejs
+[submodule "backend/java"]
+	path = backend/java
+	url = https://github.com/DGPOCs/opentelemetry-template-springboot
