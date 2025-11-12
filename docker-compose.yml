@@ -24,13 +24,41 @@ services:
       - 8889:8889 # Prometheus exporter metrics
     networks:
       - monitoring-network
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=MiPassSegura2024
+      - GF_USERS_ALLOW_SIGN_UP=false
+    networks:
+      - monitoring-network
   jaeger:
     container_name: jaeger
     image: jaegertracing/all-in-one:latest
+    environment:
+      JAEGER_PROPAGATION: w3c
     ports:
       - "6831:6831/udp" # UDP port for Jaeger agent
       - "16686:16686" # Web UI
       - "14268:14268" # HTTP port for spans
+    networks:
+      - monitoring-network
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    user: "0:0"
+    ports:
+      - "3100:3100"
+    volumes:
+      - loki-data:/var/loki
+      - ./infra/loki-config.yaml:/etc/loki/local-config.yaml
+    command: -config.file=/etc/loki/local-config.yaml
     networks:
       - monitoring-network
   prometheus:
@@ -51,6 +79,42 @@ services:
       - "5173:5173"
     networks:
       - monitoring-network
+  backnode: 
+    container_name: node-backend
+    build:
+      context: ./backend/nodejs
+      dockerfile: Dockerfile
+    ports:
+      - "4000:3000"
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://root:mipasssegura2024@mongo:27017
+      - MONGODB_DB_NAME=telemetry
+      - MONGODB_TRACES_COLLECTION=otel_traces
+      - MONGODB_LOGS_COLLECTION=otel_logs
+      - MONGODB_METRICS_COLLECTION=otel_metrics
+      - NODE_ENV=production
+      - OTEL_URL=http://otel-collector:4318
+    networks:
+      - monitoring-network
+    depends_on:
+      - mongo
+  mongo:
+    container_name: mongo
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=mipasssegura2024
+    networks:
+      - monitoring-network
 networks:
   monitoring-network:
     driver: bridge
+volumes:
+  grafana-data: {}
+  mongo-data: {}
+  loki-data: {}
