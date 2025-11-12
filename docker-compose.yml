@@ -111,6 +111,16 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=mipasssegura2024
     networks:
       - monitoring-network
+  slidev:
+    container_name: slidev
+    build:
+      context: ./docs
+      dockerfile: Dockerfile
+    ports:
+      - "3030:80"
+    networks:
+      - monitoring-network
+    
 networks:
   monitoring-network:
     driver: bridge
